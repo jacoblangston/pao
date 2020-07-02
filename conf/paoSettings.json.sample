@@ -5,5 +5,15 @@
   },
   "AuthConfig" : {
     "encryptionKey" : "foo-bar-baz-blat"
-  }
+  },
+  "Ais" : [
+    {
+      "name": "Flippy",
+      "address": "ws://localhost:2020"
+    },
+    {
+      "name": "Kung",
+      "address": "ws://localhost:2021"
+    }
+  ]
 }

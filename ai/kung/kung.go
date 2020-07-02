@@ -1,4 +1,4 @@
-// Flippy is a proof of concept AI that interfaces with the Pao server
+// Kung is a proof of concept AI that interfaces with the Pao server
 // but doesn't make any meaningful game decisions
 package main
 
@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type flippy struct {
+type kung struct {
 	conn *websocket.Conn
 }
 
@@ -28,40 +28,41 @@ var upgrader = &websocket.Upgrader{
 }
 
 func main() {
-	fmt.Println("Hello, Flippy")
-	host, port := os.Getenv("FLIPPYHOST"), os.Getenv("FLIPPYPORT")
+	fmt.Println("Hello, Kung")
+	host, port := os.Getenv("KUNGHOST"), os.Getenv("KUNGPORT")
 	if host == "" {
 		host = "localhost"
 	}
 	if port == "" {
-		port = "2020"
+		port = "2021"
 	}
+	fmt.Printf("%v:%v", host, port)
 	bind := fmt.Sprintf("%v:%v", host, port)
-	http.HandleFunc("/", flippyServe)
+	http.HandleFunc("/", kungServe)
 	http.ListenAndServe(bind, nil)
 }
 
-func flippyServe(w http.ResponseWriter, r *http.Request) {
+func kungServe(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Request: %v\n", r)
 	conn, err := upgrader.Upgrade(w, r, nil)
 	fmt.Printf("Got a new customer!\n")
 	if err != nil {
-		fmt.Printf("FlippyErr = %v\n", err.Error())
+		fmt.Printf("kungErr = %v\n", err.Error())
 		return
 	}
-	f := flippy{
+	f := kung{
 		conn: conn,
 	}
-	go playFlippy(f)
+	go playKung(f)
 	fmt.Printf("%v - Exiting Handler\n", time.Now())
 }
 
-func playFlippy(flippy flippy) {
+func playKung(kung kung) {
 
-	defer readLoop(flippy.conn)
+	defer readLoop(kung.conn)
 	for {
 		var com command.Command
-		_, bytes, err := flippy.conn.ReadMessage()
+		_, bytes, err := kung.conn.ReadMessage()
 		if err != nil {
 			fmt.Printf("%v - Error reading from websocket: %v\n", time.Now(), err.Error())
 			return
@@ -75,14 +76,14 @@ func playFlippy(flippy flippy) {
 			if err = json.Unmarshal(bytes, &bc); err != nil {
 				fmt.Printf("Error decoding board command: %v\n", string(bytes))
 			}
-			flippy.processBoard(bc)
+			kung.processBoard(bc)
 		default:
 			fmt.Printf("Message: %v\n", string(bytes))
 		}
 	}
 }
 
-func (f *flippy) processBoard(bc command.BoardCommand) {
+func (f *kung) processBoard(bc command.BoardCommand) {
 	gs := util.ParseGameState(bc)
 	if !bc.YourTurn {
 		return
@@ -101,7 +102,7 @@ func (f *flippy) processBoard(bc command.BoardCommand) {
 	}
 }
 
-func (f *flippy) flip(rank, file int) {
+func (f *kung) flip(rank, file int) {
 	s := "?" + util.ToNotation(rank, file)
 	com := command.Command{
 		Action:   "move",
@@ -110,14 +111,14 @@ func (f *flippy) flip(rank, file int) {
 	f.sendCommand(com)
 }
 
-func (f *flippy) resign() {
+func (f *kung) resign() {
 	com := command.Command{
 		Action: "resign",
 	}
 	f.sendCommand(com)
 }
 
-func (f *flippy) sendCommand(c command.Command) {
+func (f *kung) sendCommand(c command.Command) {
 	if err := f.conn.WriteJSON(c); err != nil {
 		fmt.Printf("Error sending command: %v", err.Error())
 	}

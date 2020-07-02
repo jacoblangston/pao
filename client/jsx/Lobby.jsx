@@ -11,6 +11,12 @@ var Lobby = React.createClass({
             document.getElementById('game')
         );
     },
+    playKungAi: function() {
+        React.render(
+            React.createElement(Game, { name: this.state.name, ai: "Kung" }),
+            document.getElementById('game')
+        )
+    },
     join: function (id) {
         React.render(
             React.createElement(Game, { name: this.state.name, id: id }),
@@ -46,6 +52,7 @@ var Lobby = React.createClass({
                 </div>
                 <div><button onClick={this.joinNew}>Join New Game</button></div>
                 <div><button onClick={this.playAi}>Play Flippy</button></div>
+                <div><button onClick={this.playKungAi}>Play Kung</button></div>
                 <LeaderBoard />
             </div>
         )
