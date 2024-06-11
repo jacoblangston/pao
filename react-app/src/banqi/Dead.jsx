@@ -1,18 +1,29 @@
-var DeadPieces = React.createClass({
-  render : function(){
+import React from 'react';
+import { StrengthCompareD, NotationToColor, NotationToCss } from './Utils.js';
+
+export default class DeadPieces extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      sort : "strength",
+      lastDead: ""
+    }
+  }
+  
+  render(){
     var redDead = [];
     var blackDead = [];
     var chances = this.computeRemainingChances(this.props.dead, this.props.board);
     var dead = this.props.dead;
     for (var i= 0; i<dead.length; i++){
       var color = NotationToColor[dead[i]]
-      if (color == 'red'){
+      if (color === 'red'){
         redDead.push(dead[i])
-      } else if (color == 'black'){
+      } else if (color === 'black'){
         blackDead.push(dead[i])
       }
     }
-    if (this.state.sort == 'strength') {
+    if (this.state.sort === 'strength') {
       redDead.sort(StrengthCompareD);
       blackDead.sort(StrengthCompareD);
     }
@@ -25,14 +36,8 @@ var DeadPieces = React.createClass({
         <div className="black-dead">{blackPieces}</div>
       </div>
     );
-  },
-  getInitialState: function() {
-    return {
-      sort : "strength",
-      lastDead: ""
-    };
-  },
-  deadPiece: function(piece, state, lastMove, chances) {
+  }
+  deadPiece(piece, state, lastMove, chances) {
     // `state` is 'dead', 'live', or 'unborn'
     var classes = []
     classes.push('banqi-square');
@@ -44,12 +49,12 @@ var DeadPieces = React.createClass({
     classes.push(NotationToCss[piece]);
     var classString = classes.reduce(function(p, c) { return p + " " + c});
     var title = state + " " + type;
-    if (state == 'unborn') {
+    if (state === 'unborn') {
         title += " " + chances[type] + "%";
     }
     return <div className={classString} title={title} />
-  },
-  deadPieces: function(all, dead, live, chances) {
+  }
+  deadPieces(all, dead, live, chances) {
     var lastDead = this.props.lastDead;
     var self = this;
     dead = dead.reduce(function(p, c) { return p + " " + c}, '');
@@ -60,7 +65,7 @@ var DeadPieces = React.createClass({
       if (dead.indexOf(piece) >= 0) {
         state = 'dead';
         dead = dead.replace(piece, '');
-        if (piece == lastDead) {
+        if (piece === lastDead) {
           lastMove = true;
           lastDead = ''
         }
@@ -70,63 +75,44 @@ var DeadPieces = React.createClass({
       }
       return self.deadPiece(piece, state, lastMove, chances);
     })
-  },
-  collectKnownPieces: function(board) {
+  }
+  collectKnownPieces(board) {
     var knownPieces = [];
     for (var rank=0; rank < 4; rank++) {
       for (var file=0; file < 8; file++) {
         var piece = board[rank][file]
-        if (piece != '?' && piece != '.') {
+        if (piece !== '?' && piece !== '.') {
           knownPieces.push(piece);
         }
       }
     }
     return knownPieces;
-  },
-    computeRemainingChances : function(dead, board) {
-      var remaining = 'kggeecchhpppppqq' + 'KGGEECCHHPPPPPQQ';
-      var chances = {};
+  }
+    computeRemainingChances(dead, board) {
+      // eslint-disable-next-line
+      let remaining = 'kggeecchhpppppqq' + 'KGGEECCHHPPPPPQQ';
+      let chances = {};
       dead = dead.concat(this.collectKnownPieces(board));
-      var pieceCounts = {}
-      for (var i in dead) {
-          var piece = dead[i];
-          var index = remaining.indexOf(piece);
+      let pieceCounts = {}
+      for (let i in dead) {
+          let piece = dead[i];
+          let index = remaining.indexOf(piece);
           remaining = remaining.slice(0, index) + remaining.slice(index + 1);
       }
 
-      for (var i = 0; i< remaining.length; i++) {
-          var piece = remaining[i];
-          var type = NotationToCss[piece];
+      for (let i = 0; i< remaining.length; i++) {
+          let piece = remaining[i];
+          let type = NotationToCss[piece];
           if (pieceCounts[type]) {
               pieceCounts[type]++
           } else {
               pieceCounts[type] = 1;
           }
       }
-      for (var type in pieceCounts) {
-          if (remaining.indexOf(piece) != -1) {
-              var percent = ((pieceCounts[type] / remaining.length) * 100).toFixed(2);
-              chances[type] =  percent;
-          }
+      for (let type in pieceCounts) {
+          let percent = ((pieceCounts[type] / remaining.length) * 100).toFixed(2);
+          chances[type] =  percent;
       }
       return chances;
   }
-});
-
-PieceStrength = ["Q","P","H","C","E","G","K"]
-StrengthCompareD = function(a,b){
-  return StrengthCompare(a,b,true)
-};
-StrengthCompare = function(a, b, desc){
-  a = a.toUpperCase();
-  b = b.toUpperCase();
-  aStrength = PieceStrength.indexOf(a);
-  bStrength = PieceStrength.indexOf(b);
-  if (!(aStrength > -1 && bStrength > -1)){
-    return 0;
-  }
-  if (desc){
-    return bStrength - aStrength;
-  }
-  return aStrength - bStrength;
-};
+}

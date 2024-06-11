@@ -52,6 +52,9 @@ func main() {
 	httpMux.HandleFunc("/cu", a.Cu)
 	httpMux.HandleFunc("/leaderBoard", paoDb.GetLeaderBoard)
 
+	// Serve the UI here
+	httpMux.Handle("/", http.FileServer(http.Dir("./react-app/build/")))
+
 	go func() {
 		for {
 			select {
@@ -70,7 +73,7 @@ func main() {
 
 	bind := fmt.Sprintf("%s:%s", host, port)
 
-	httpMux.Handle("/", http.FileServer(http.Dir("./client/")))
+	fmt.Printf("Listening on %s\n", bind)
 	err = http.ListenAndServe(bind, httpMux)
 	if err != nil {
 		panic("ListenAndServe:" + err.Error())
@@ -103,13 +106,15 @@ func (lgh listGamesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var resp []gameResponse
 	for id, game := range lgh.games {
 		var players []string
-		if game.CurrentPlayer != nil {
-			players = append(players, game.CurrentPlayer.Name)
+		if game.CurrentPlayer() != nil {
+			players = append(players, game.CurrentPlayer().Name)
 		}
-		if game.NextPlayer != nil {
-			players = append(players, game.NextPlayer.Name)
+		if game.NextPlayer() != nil {
+			players = append(players, game.NextPlayer().Name)
 		}
-		resp = append(resp, gameResponse{ID: id, Players: players})
+		if len(players) != 0 {
+			resp = append(resp, gameResponse{ID: id, Players: players})
+		}
 	}
 	js, err := json.Marshal(resp)
 	if err != nil {
